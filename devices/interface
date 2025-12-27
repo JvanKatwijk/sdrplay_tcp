@@ -1,0 +1,31 @@
+
+
+
+
+dongleInfo
+
+struct {
+	uint8_t Magic [4];
+	uint32_t tunertype;
+	uint32_t tunergaintype;
+} dongleInfo;
+
+
+	switch (cmd) {
+	   case 1:
+	      uint32_t arg = fetchArg ();
+	      setVFOFrequency (arg);
+	      break;
+
+	   case 2:
+	      uint32_t arg = fetchArh ();
+	      setSampleRate (arg);
+	      break;
+
+	   case 3:
+	      uint8_t arg = fetchArg ();
+	      setAgcMode (arg);
+	      break;
+
+	   case 4:
+	   
