@@ -36,10 +36,11 @@
 
 #define SETFREQUENCY_REQUEST	0104
 #define	SAMPLERATE_REQUEST	0105
-#define AGC_REQUEST             0106
-#define GRDB_REQUEST            0107
-#define PPM_REQUEST             0110
-#define	BIAS_T_REQUEST		0111
+#define	BANDWIDTH_REQUEST	0106
+#define AGC_REQUEST             0107
+#define GRDB_REQUEST            0110
+#define PPM_REQUEST             0111
+#define	BIAS_T_REQUEST		0112
 #include	<QSemaphore>
 #include	<stdio.h>
 
@@ -137,6 +138,17 @@ public:
 	}
 
 	~set_samplerateRequest	() {}
+};
+
+class set_bandwidthRequest: public generalCommand {
+public:
+	int bandwidth;
+	set_bandwidthRequest (int bandwidth):
+	   generalCommand (BANDWIDTH_REQUEST) {
+	   this	-> bandwidth = bandwidth;
+	}
+
+	~set_bandwidthRequest	() {}
 };
 
 class agcRequest: public generalCommand {

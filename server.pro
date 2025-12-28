@@ -39,6 +39,8 @@ HEADERS += ./server.h \
 	   ./support/errorlog.h \
 	   ./support/spectrum-scope.h \
 	   ./support/fft.h \
+	   ./support/base-converter.h \
+	   ./support/interpolator.h \
 	   ./devices/device-exceptions.h \
 	   ./devices/device-handler.h \
 	   ./devices/sdrplay-handler-v3/sdrplay-handler-v3.h \
@@ -62,6 +64,8 @@ SOURCES += ./main.cpp \
 	   ./support/errorlog.cpp \
 	   ./support/spectrum-scope.cpp \
 	   ./support/fft.cpp \
+	   ./support/base-converter.cpp \
+	   ./support/interpolator.cpp \
 	   ./devices/device-handler.cpp \
 	   ./devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp \
 	   ./devices/sdrplay-handler-v3/Rsp-device.cpp \

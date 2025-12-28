@@ -35,9 +35,11 @@
 #include	"ui_sdrplay-widget-v3.h"
 #include	<sdrplay_api.h>
 
+#include	<mutex>
 #include	<QScopedPointer>
 #include	"Rsp-device.h"
 
+class		baseConverter;
 #ifndef	KHz
 #define	KHz(x)	(1000 * x)
 #endif
@@ -150,6 +152,10 @@ public:
 
 	void			computeGain		(int, int,
 	                                                 int &, int &);
+	sdrplay_api_Bw_MHzT	getBandwidth		(int);
+	std::mutex		locker;
+	baseConverter		*theConverter;
+	void			set_converter		(int, int);
 signals:
 	void			newGRdBValue		(int);
 	void			newLnaValue		(int);

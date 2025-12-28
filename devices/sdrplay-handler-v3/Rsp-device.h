@@ -59,6 +59,7 @@ virtual int	get_lnaState	(int frequency, int reduction);
 virtual int	get_lnaReduction	(int frequency, int state);
 	bool	set_VFO		(int freq);
 	bool	set_SampleRate	(int samplerate);
+	bool	set_bandWidth	(int bandwidth);
 virtual	bool	restart		(int freq);
 	bool	setAgc		(int setPoint, bool on);
 virtual	bool	setLna		(int lnaState);

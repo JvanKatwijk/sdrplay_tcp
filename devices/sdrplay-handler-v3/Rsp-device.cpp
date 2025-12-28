@@ -218,9 +218,34 @@ sdrplay_api_ErrT err;
 	return true;
 }
 
+bool	RspDevice::set_bandWidth	(int bandwidth) {
+sdrplay_api_ErrT err;
+        chParams        -> tunerParams. bwType =
+	                              sdrplay_api_Bw_MHzT (bandwidth);
+	err =  parent -> sdrplay_api_Update (chosenDevice -> dev,
+	                                     chosenDevice -> tuner,
+	                                     sdrplay_api_Update_Tuner_BwType,
+	                                     sdrplay_api_Update_Ext1_None);
+        if (err != sdrplay_api_Success) {
+           QString errorString = parent -> sdrplay_api_GetErrorString (err);
+           showState (errorString);
+	   return false;
+        }
+}
+
 bool	RspDevice::set_SampleRate	(int samplerate)  {
-	(void)samplerate;
-	return false;
+sdrplay_api_ErrT err;
+	deviceParams    -> devParams	-> fsFreq. fsHz    = SAMPLERATE;
+	err =  parent -> sdrplay_api_Update (chosenDevice -> dev,
+	                                    chosenDevice -> tuner,
+	                                    sdrplay_api_Update_Dev_Fs,
+	                                    sdrplay_api_Update_Ext1_None);
+        if (err != sdrplay_api_Success) {
+           QString errorString = parent -> sdrplay_api_GetErrorString (err);
+           showState (errorString);
+	   return false;
+        }
+	return true;
 }
 
 int	RspDevice::get_lnaState        (int frequency, int reduction) {

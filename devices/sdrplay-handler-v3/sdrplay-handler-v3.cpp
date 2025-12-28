@@ -33,6 +33,10 @@
 #include	"settings-handler.h"
 #include	"device-exceptions.h"
 
+//
+//	converters
+#include	"base-converter.h"
+#include	"interpolator.h"
 //	The Rsp handlers
 #include	"Rsp-device.h"
 #include	"RspI-handler.h"
@@ -108,6 +112,7 @@ std::string errorMessage (int errorCode) {
 	shifter			= 4;	// default;
 	denominator		= 2048.0f;	// default
 
+	theConverter		= new baseConverter ();
 //	See if there are settings from previous incarnations
 //	and config stuff
 
@@ -364,8 +369,20 @@ void	sdrplayHandler_v3::tcp_setFrequency        (int newFreq) {
 void	sdrplayHandler_v3::tcp_setSampleRate       (int samplerate) {
         if (!receiverRuns. load ())
            return;
-	set_samplerateRequest r (samplerate);
-	messageHandler (&r);
+	if (samplerate >= 2000000) {
+	   set_samplerateRequest r1 (samplerate);
+	   messageHandler (&r1);
+	   set_bandwidthRequest r2 (getBandwidth ((int)samplerate));
+	   messageHandler (&r2);
+	   set_converter (samplerate, samplerate);
+	}
+	else {
+	   set_samplerateRequest r1 (2000000);
+	   messageHandler (&r1);
+	   set_bandwidthRequest r2 (getBandwidth ((int)samplerate));
+	   messageHandler (&r2);
+	   set_converter (2000000, samplerate);
+	}
 }
 
 void	sdrplayHandler_v3::tcp_setGainMode         (bool b) {
@@ -899,6 +916,16 @@ int	deviceIndex	= 0;
 	         break;
 	      }
 
+	      case BANDWIDTH_REQUEST: {
+	         set_bandwidthRequest *p =
+	               (set_bandwidthRequest *)(serverQueue. front ());
+	         serverQueue. pop ();
+	         p -> result = theRsp -> set_bandWidth (p -> bandwidth);
+	         receiverRuns. store (true);
+	         p -> waiter. release (1);
+	         break;
+	      }
+
 	      case AGC_REQUEST: {
 	         agcRequest *p = 
 	                    (agcRequest *)(serverQueue. front ());
@@ -1266,14 +1293,23 @@ int shifter	= nrBits - 7;
 	   
 void	sdrplayHandler_v3::processBuffer (std::complex<int16_t> *b, int size) {
 std::complex<uint8_t> buffer [size];
-	for (int i = 0; i < size; i ++) 
-	   buffer [i] = std::complex<uint8_t> (
-	                   from_int16_to_uint8 (real (b [i]), nrBits),
-	                   from_int16_to_uint8 (imag (b [i]), nrBits));
-	_I_Buffer ->  putDataIntoBuffer (buffer, size);
+int	teller	= 0;
+	locker. lock ();
+	if (theConverter != nullptr) {		// should not/ cannot happen
+	   for (int i = 0; i < size; i ++)  {
+	      std::complex<int16_t> y;
+	      if (theConverter -> process (y, y)) {
+	         std::complex<uint8_t> x = std::complex<uint8_t> (
+	                         from_int16_to_uint8 (real (y), nrBits),
+	                         from_int16_to_uint8 (imag (y), nrBits));
+	         buffer [teller ++] = x;
+	      }
+	   }
+	   _I_Buffer ->  putDataIntoBuffer (buffer, teller);
+	}
+	locker. unlock ();
 	if (_I_Buffer -> GetRingBufferReadAvailable () >= 2048)
 	   newData (2049);
-	      
 }
 //
 //	we have to simulate a reasonable gain value (not gainreduction)
@@ -1307,8 +1343,36 @@ void	sdrplayHandler_v3::computeGain (int frequency, int gainValue,
 	}
 }
 
-	                                         
-	
-	
-	
+sdrplay_api_Bw_MHzT	sdrplayHandler_v3::getBandwidth	(int samplerate) {
+	if (samplerate >= MHz (8))
+	   return sdrplay_api_BW_8_000;
+	if (samplerate >= MHz (7))
+	   return sdrplay_api_BW_7_000;
+	if (samplerate >= MHz (6))
+	   return sdrplay_api_BW_6_000;
+	if (samplerate >= MHz (5))
+	   return sdrplay_api_BW_5_000;
+	if (samplerate >= KHz (1536))
+	   return sdrplay_api_BW_1_536;
+	if (samplerate >= KHz (600))
+	   return sdrplay_api_BW_0_600;
+	if (samplerate >= KHz (300))
+	   return sdrplay_api_BW_0_300;
+	return sdrplay_api_BW_0_200;
+}
 
+void	sdrplayHandler_v3::set_converter (int inrate, int outrate) {
+	locker. lock ();
+	if (theConverter != nullptr)
+	   delete theConverter;
+	if (inrate == outrate) {
+	  theConverter	= new baseConverter ();
+	  locker. unlock ();
+	   return;
+	}
+//	we know that outrate < inrate now
+//	for no, we just use filtering and interpolation
+	theConverter	= new interpolator (inrate, outrate);
+	locker. unlock ();
+}
+	
