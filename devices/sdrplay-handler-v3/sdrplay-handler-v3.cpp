@@ -386,6 +386,7 @@ void	sdrplayHandler_v3::tcp_setSampleRate       (int samplerate) {
 }
 
 void	sdrplayHandler_v3::tcp_setGainMode         (bool b) {
+	(void)b;
 }
 
 void	sdrplayHandler_v3::tcp_setAgc		(int v) {
@@ -1297,7 +1298,7 @@ int	teller	= 0;
 	locker. lock ();
 	if (theConverter != nullptr) {		// should not/ cannot happen
 	   for (int i = 0; i < size; i ++)  {
-	      std::complex<int16_t> y;
+	      std::complex<int16_t> y = b [i];
 	      if (theConverter -> process (y, y)) {
 	         std::complex<uint8_t> x = std::complex<uint8_t> (
 	                         from_int16_to_uint8 (real (y), nrBits),
